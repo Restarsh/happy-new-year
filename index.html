@@ -13,23 +13,118 @@
             margin-top: 20%;
             font-size: 40px;
         }
+
+        #message {
+            position: absolute;
+            top: 40%;
+            width: 100%;
+            text-align: center;
+            font-size: 50px;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
-    <div id="countdown">5</div>
+    <div id="message">5</div>
+    <canvas id="canvas"></canvas>
 
-    <script> 
-        let count = 5
-        const countdownElement = document.getElementById("countdown");
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
 
-        const timer = setInterval(() =>{
-            count--;
-            if(count > 0) {
-                countdownElement.textContent = count;
+        window.onresize = () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        };
+
+        class Firework {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height;
+                this.targetY = Math.random() * canvas.height / 2;
+                this.speed = Math.random() * 3 + 2;
+                this.exploded = false;
+                this.particles = [];
             }
-            else {
+
+            update(){
+                if(!this.exploded) {
+                    this.y -= this.speed;
+                    if(this.y <= this.targetY) {
+                        this.explode();
+                        this.exploded = true;
+                    }
+                }
+                this.particles.forEach( p => p.update());
+            }
+
+            draw() {
+                if (!this.exploded) {
+                    ctx.fillStyle = "white";
+                    ctx.fillRect(this.x, this.y, 3, 3);
+                }
+                this.particles.forEach(p => p.draw());
+            }
+            explode() {
+                for(let i = 0; i < 50; i++) {
+                    this.particles.push(new Particle(this.x, this.y));
+                }
+            }
+        }
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.speedX = (Math.random() - 0.5) * 6;
+                this.speedY = (Math.random() - 0.5) * 6;
+                this.life = 60;
+                this.color = `hsl($(Math.random() * 360), 100%, 50%)`;
+            }
+            update() {
+                this.x = this.speedX;
+                this.y = this.speedY;
+                this.life--;
+            }
+            draw() {
+                if(this.life > 0){
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(this.x, this.y, 3, 3);
+                }
+            }
+        }
+
+        let fireworks = [];
+
+        function animate() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            if (Math.random() < 0.05) {
+                fireworks.push(new Firework());
+            }
+
+            fireworks.forEach(f => {
+                f.update();
+                f.draw();
+            });
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        let count = 5;
+        const message = document.getElementById("message");
+
+        const timer = setInterval(() => {
+            count --;
+            if(count > 0) {
+                message.textContent = count;
+            } else {
                 clearInterval(timer);
-                countdownElement.textContent = "🎆🎉 Happy New Year! 🎉🎆"
+                message.textContent = "🎆🎉 Happy New Year! 🎉🎆";
             }
         }, 1000);
     </script>
